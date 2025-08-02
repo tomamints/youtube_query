@@ -53,6 +53,14 @@ async function initialize() {
     return;
   }
 
+  // 拡張機能が有効かチェック
+  const { settings } = await chrome.storage.local.get(['settings']);
+  if (settings && settings.enabled === false) {
+    console.log('🔴 Extension is disabled');
+    cleanup(); // 既存のUIをクリーンアップ
+    return;
+  }
+
   console.log('📺 Video page detected!');
   
   // 動画要素の確認
@@ -933,6 +941,27 @@ document.addEventListener('visibilitychange', () => {
     if (video && !panel) {
       console.log('📺 Page became visible, initializing...');
       waitForVideo(initialize);
+    }
+  }
+});
+
+// 設定変更を監視
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.settings) {
+    const newSettings = changes.settings.newValue;
+    const oldSettings = changes.settings.oldValue;
+    
+    // enabled状態が変更された場合
+    if (newSettings && oldSettings && newSettings.enabled !== oldSettings.enabled) {
+      console.log('🔄 Extension enabled state changed:', newSettings.enabled);
+      
+      if (newSettings.enabled === false) {
+        console.log('🔴 Extension disabled, cleaning up...');
+        cleanup();
+      } else if (isYouTubeVideoPage()) {
+        console.log('🟢 Extension enabled, initializing...');
+        waitForVideo(initialize);
+      }
     }
   }
 });
