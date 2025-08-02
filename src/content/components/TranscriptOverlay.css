@@ -1,0 +1,217 @@
+/* 字幕オーバーレイのスタイル */
+.transcript-overlay {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  min-width: 400px;
+  max-width: 600px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.transcript-overlay.minimized {
+  bottom: 20px;
+  left: 20px;
+  transform: none;
+  min-width: auto;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.minimize-icon {
+  font-size: 24px;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px 8px 0 0;
+}
+
+.overlay-title {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.minimize-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 5px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.minimize-button:hover {
+  opacity: 1;
+}
+
+.transcript-content {
+  padding: 20px;
+  font-size: 18px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.transcript-word {
+  display: inline-block;
+  padding: 2px 4px;
+  margin: 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.transcript-word:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.transcript-word:active {
+  transform: scale(0.95);
+}
+
+.transcript-word.selected {
+  background: #4CAF50;
+  color: white;
+  font-weight: bold;
+}
+
+/* 単語ホバー時のツールチップ風エフェクト */
+.transcript-word:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.3s forwards;
+}
+
+@keyframes tooltip-fade-in {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+  }
+}
+
+.overlay-footer {
+  padding: 10px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 8px 8px;
+}
+
+.hint-text {
+  font-size: 12px;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .transcript-overlay {
+    min-width: 300px;
+    max-width: 90vw;
+    bottom: 80px;
+  }
+  
+  .transcript-content {
+    font-size: 16px;
+    padding: 15px;
+  }
+}
+
+/* アニメーション */
+.transcript-overlay {
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 日本語の場合のスタイル調整 */
+.transcript-word:lang(ja) {
+  padding: 2px 2px;
+  margin: 1px;
+}
+
+/* 音声認識による字幕のスタイル */
+.transcript-word.speech-caption {
+  background: rgba(34, 139, 34, 0.2);
+  border-bottom: 2px solid #228b22;
+  position: relative;
+  padding: 4px 6px;
+  margin: 2px 3px;
+  animation: speechCaptionPulse 2s infinite;
+}
+
+@keyframes speechCaptionPulse {
+  0%, 100% { 
+    background: rgba(34, 139, 34, 0.2);
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(34, 139, 34, 0.3);
+    transform: scale(1.02);
+  }
+}
+
+.transcript-word.speech-caption:hover {
+  background: rgba(34, 139, 34, 0.4);
+  transform: scale(1.05);
+}
+
+/* 音声認識中の字幕コンテナ */
+.transcript-content.has-speech-caption {
+  border: 2px solid rgba(34, 139, 34, 0.5);
+  border-radius: 4px;
+  padding: 22px;
+}
+
+/* 音声認識インジケータ */
+.speech-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 16px;
+  animation: blink 1s infinite;
+}

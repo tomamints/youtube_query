@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Caption Test</title>
+</head>
+<body>
+    <h1>YouTube Caption Test</h1>
+    <p>Open this file after installing the extension, then check the console for debugging information.</p>
+    
+    <script>
+        // Test if we can find ytInitialPlayerResponse
+        console.log('Testing caption extraction...');
+        
+        // Simulate YouTube's structure
+        window.ytInitialPlayerResponse = {
+            captions: {
+                playerCaptionsTracklistRenderer: {
+                    captionTracks: [
+                        {
+                            baseUrl: "https://www.youtube.com/api/timedtext?v=VIDEO_ID&lang=ja",
+                            name: { simpleText: "Japanese" },
+                            languageCode: "ja",
+                            kind: "asr"
+                        }
+                    ]
+                }
+            }
+        };
+        
+        console.log('ytInitialPlayerResponse:', window.ytInitialPlayerResponse);
+    </script>
+</body>
+</html>
