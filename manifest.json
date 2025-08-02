@@ -12,6 +12,7 @@
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
     "http://localhost:3456/*"
   ],
   "background": {

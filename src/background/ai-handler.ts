@@ -16,12 +16,18 @@ interface Settings {
 // Claude APIを呼び出す
 async function callClaudeAPI(apiKey: string, prompt: string): Promise<string> {
   try {
+    console.log('Claude API Request:', {
+      apiKeyPrefix: apiKey.substring(0, 10) + '...',
+      promptLength: prompt.length
+    });
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
         model: 'claude-3-haiku-20240307', // 高速で安価なモデル
@@ -33,15 +39,27 @@ async function callClaudeAPI(apiKey: string, prompt: string): Promise<string> {
       })
     });
 
+    console.log('Claude API Response Status:', response.status);
+
     if (!response.ok) {
       const error = await response.text();
+      console.error('Claude API Error Response:', error);
       throw new Error(`Claude API error: ${response.status} - ${error}`);
     }
 
     const data = await response.json();
+    console.log('Claude API Success:', { 
+      model: data.model,
+      usage: data.usage 
+    });
+    
+    if (!data.content || !data.content[0]?.text) {
+      throw new Error('Claude APIから有効な応答がありません');
+    }
+    
     return data.content[0].text;
   } catch (error) {
-    console.error('Claude API error:', error);
+    console.error('Claude API error details:', error);
     throw error;
   }
 }

@@ -207,13 +207,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   saveButton.addEventListener('click', async () => {
     const settings: Settings = {
       apiProvider: apiProviderSelect.value as Settings['apiProvider'],
-      apiKey: apiKeyInput.value,
+      apiKey: apiKeyInput.value.trim(), // 前後の空白を削除
       language: languageSelect.value as Settings['language']
     };
 
     // APIキーが必要な場合はバリデーション
     if ((settings.apiProvider === 'openai' || settings.apiProvider === 'claude-api') && !settings.apiKey) {
       showStatus('APIキーを入力してください', 'error');
+      return;
+    }
+    
+    // APIキーの形式をチェック
+    if (settings.apiProvider === 'openai' && settings.apiKey && !settings.apiKey.startsWith('sk-')) {
+      showStatus('OpenAI APIキーは "sk-" で始まる必要があります', 'error');
+      return;
+    }
+    
+    if (settings.apiProvider === 'claude-api' && settings.apiKey && !settings.apiKey.startsWith('sk-ant-')) {
+      showStatus('Claude APIキーは "sk-ant-" で始まる必要があります', 'error');
       return;
     }
 

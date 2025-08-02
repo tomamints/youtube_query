@@ -568,9 +568,34 @@ function simpleCheckCaptions() {
   }
   
   // 現在YouTubeが表示している全文を取得
-  const captionText = captionWindow.textContent?.trim() || '';
+  let captionText = captionWindow.textContent?.trim() || '';
+  
+  // YouTube UIテキストを除去
+  const uiPatterns = [
+    /英語\s*\(自動生成\)\s*>>\s*日本語\s*をクリックして設定/g,
+    /英語\s*\(自動生成\)\s*>>/g,
+    />>\s*日本語\s*をクリックして設定/g,
+    /をクリックして設定$/g,
+    /^英語\s*\(自動生成\)$/,
+    /^日本語$/
+  ];
+  
+  for (const pattern of uiPatterns) {
+    captionText = captionText.replace(pattern, '').trim();
+  }
   
   if (!captionText) {
+    // 字幕が消えた（リセットの可能性）
+    if (lastSeenCaption) {
+      console.log('🔴 字幕が消えました - リセットの可能性');
+      // 累積テキストを処理（未完成でも保存）
+      processAccumulatedText();
+      // リセット
+      accumulatedText = '';
+    }
+    
+    lastSeenCaption = '';
+    
     // テキストがない場合は履歴のみ
     currentCaptions = sentenceHistory.map((text) => ({
       text: text,
@@ -587,8 +612,16 @@ function simpleCheckCaptions() {
   
   // 字幕が変わった場合の処理
   if (captionText !== lastSeenCaption) {
+    // 字幕がリセットされたかチェック（空→テキストの遷移）
+    if (!lastSeenCaption && captionText) {
+      console.log('🔄 字幕リセット検出: 空→新規');
+      // 前の累積テキストを処理
+      processAccumulatedText();
+      // 新しい累積を開始
+      accumulatedText = captionText;
+    }
     // 前の字幕が現在の字幕に含まれている場合（継続）
-    if (lastSeenCaption && captionText.startsWith(lastSeenCaption)) {
+    else if (lastSeenCaption && captionText.startsWith(lastSeenCaption)) {
       // 新しい部分だけを追加
       const newPart = captionText.substring(lastSeenCaption.length);
       accumulatedText += newPart;
@@ -609,8 +642,19 @@ function simpleCheckCaptions() {
     }
     // 完全に新しい字幕の場合
     else {
+      // YouTubeが長文をリセットした可能性をチェック
+      const isLikelyReset = lastSeenCaption && lastSeenCaption.length > 50 && 
+                           !captionText.match(/^[。？！、]/); // 句読点で始まらない
+      
+      if (isLikelyReset) {
+        console.log('🚨 長文リセット検出: 前の字幕が切れた可能性');
+        // 前の累積テキストを処理（未完成でも保存）
+        processAccumulatedText();
+        // 新しい累積を開始
+        accumulatedText = captionText;
+      }
       // 短い字幕で句点で終わる場合は、前の累積と結合を試みる
-      if (captionText.length < 20 && captionText.match(/[。？！]$/)) {
+      else if (captionText.length < 20 && captionText.match(/[。？！]$/)) {
         // 累積テキストの最後の文と結合できるかチェック
         const lastSentence = extractSentences(accumulatedText).current;
         if (lastSentence && !lastSentence.match(/[。？！]$/)) {

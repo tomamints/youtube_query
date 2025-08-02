@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getSettings } from '../../popup/popup';
 import './ExplanationPanel.css';
 
 interface ExplanationPanelProps {
@@ -12,6 +11,41 @@ interface Message {
   content: string;
 }
 
+interface Settings {
+  apiKey: string;
+  apiProvider: 'instant' | 'openai' | 'claude-api' | 'claude-subscription' | 'claude-screenshot' | 'claude-local';
+  language: 'ja' | 'en';
+}
+
+// 設定を取得する関数
+async function getSettings(): Promise<Settings> {
+  return new Promise((resolve, reject) => {
+    // 拡張機能のコンテキストが有効かチェック
+    if (!chrome.runtime?.id) {
+      reject(new Error('拡張機能が再読み込みされました。ページをリロードしてください。'));
+      return;
+    }
+    
+    try {
+      chrome.storage.local.get(['settings'], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        
+        const settings: Settings = result.settings || {
+          apiKey: '',
+          apiProvider: 'instant',
+          language: 'ja'
+        };
+        resolve(settings);
+      });
+    } catch (error) {
+      reject(new Error('設定の取得に失敗しました。ページをリロードしてください。'));
+    }
+  });
+}
+
 export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord, context }) => {
   const [currentAnswer, setCurrentAnswer] = useState<{ word: string; answer: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +53,10 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  console.log('ExplanationPanel rendered with:', { selectedWord, context });
+
   useEffect(() => {
+    console.log('ExplanationPanel useEffect triggered:', { selectedWord, currentAnswer });
     if (selectedWord && selectedWord !== currentAnswer?.word) {
       handleWordClick(selectedWord, context);
     }
@@ -27,17 +64,28 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
 
   const handleWordClick = async (word: string, fullText: string) => {
     console.log('ExplanationPanel: handleWordClick called with:', word);
+    console.log('Full context:', fullText);
     setLoading(true);
     setCurrentAnswer(null); // 前の回答をクリア
     
     try {
+      console.log('Getting settings...');
       const settings = await getSettings();
       console.log('Settings:', settings);
       
       // 動画コンテキストでの意味を尋ねるプロンプト
       const initialPrompt = `この動画の文脈における「${word}」の意味を教えてください。動画の内容: ${fullText}`;
+      console.log('Initial prompt:', initialPrompt);
+      
+      console.log('About to send message, provider:', settings.apiProvider);
       
       if (settings.apiProvider === 'instant') {
+        console.log('Using instant provider');
+        // コンテキストが無効でないかチェック
+        if (!chrome.runtime?.id) {
+          throw new Error('拡張機能が再読み込みされました。ページをリロードしてください。');
+        }
+        
         chrome.runtime.sendMessage({
           type: 'INSTANT_ANSWER',
           word: initialPrompt,
@@ -45,6 +93,12 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
           language: settings.language
         }, (response) => {
           console.log('Instant answer response:', response);
+          if (chrome.runtime.lastError) {
+            console.error('Chrome runtime error:', chrome.runtime.lastError);
+            setCurrentAnswer({ word, answer: 'エラー: 拡張機能との通信に失敗しました。ページをリロードしてください。' });
+            setLoading(false);
+            return;
+          }
           if (response && response.answer) {
             setCurrentAnswer({ word, answer: response.answer });
             // 最初の解説をチャット履歴に追加
@@ -58,12 +112,25 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
           setLoading(false);
         });
       } else {
+        console.log('Using API provider:', settings.apiProvider);
+        // コンテキストが無効でないかチェック
+        if (!chrome.runtime?.id) {
+          throw new Error('拡張機能が再読み込みされました。ページをリロードしてください。');
+        }
+        
         chrome.runtime.sendMessage({
           type: 'ASK_AI',
           word: initialPrompt,
           context: fullText,
           language: settings.language
         }, (response) => {
+          console.log('ASK_AI response:', response);
+          if (chrome.runtime.lastError) {
+            console.error('Chrome runtime error:', chrome.runtime.lastError);
+            setCurrentAnswer({ word, answer: 'エラー: 拡張機能との通信に失敗しました。ページをリロードしてください。' });
+            setLoading(false);
+            return;
+          }
           if (response && response.answer) {
             setCurrentAnswer({ word, answer: response.answer });
             // 最初の解説をチャット履歴に追加
@@ -72,13 +139,22 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
               { role: 'assistant', content: response.answer }
             ]);
           } else if (response && response.error) {
-            setCurrentAnswer({ word, answer: `エラー: ${response.error}` });
+            let errorMessage = response.error;
+            if (response.error.includes('429') || response.error.includes('quota')) {
+              errorMessage = 'OpenAI APIの利用上限に達しました。\n\n対処方法：\n1. OpenAIアカウントにクレジットを追加\n2. または設定で「即答モード（無料）」に切り替え';
+            } else if (response.error.includes('401')) {
+              errorMessage = 'APIキーが無効です。設定画面で正しいAPIキーを入力してください。';
+            } else if (response.error.includes('credit balance is too low')) {
+              errorMessage = 'Claude APIのクレジット残高が不足しています。\n\n対処方法：\n1. Anthropicアカウントでクレジットを追加\n2. またはOpenAI (ChatGPT)に切り替え';
+            }
+            setCurrentAnswer({ word, answer: errorMessage });
           }
           setLoading(false);
         });
       }
     } catch (error) {
-      console.error('Error handling word click:', error);
+      console.error('Error in handleWordClick:', error);
+      setCurrentAnswer({ word, answer: `エラー: ${error instanceof Error ? error.message : '不明なエラー'}` });
       setLoading(false);
     }
   };
@@ -171,6 +247,34 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
               {!currentAnswer && !loading && (
                 <div className="answer-placeholder">
                   字幕の単語をクリックすると<br/>解説が表示されます
+                </div>
+              )}
+              
+              {currentAnswer && currentAnswer.answer.includes('拡張機能が再読み込み') && (
+                <div className="error-message" style={{
+                  backgroundColor: '#ffebee',
+                  color: '#c62828',
+                  padding: '12px',
+                  borderRadius: '4px',
+                  margin: '12px',
+                  fontSize: '14px'
+                }}>
+                  {currentAnswer.answer}
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    style={{
+                      display: 'block',
+                      marginTop: '8px',
+                      padding: '6px 12px',
+                      backgroundColor: '#c62828',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ページをリロード
+                  </button>
                 </div>
               )}
             </>
