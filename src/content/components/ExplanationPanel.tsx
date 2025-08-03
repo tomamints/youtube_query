@@ -13,7 +13,7 @@ interface Message {
 
 interface Settings {
   apiKey: string;
-  apiProvider: 'instant' | 'openai' | 'claude-api' | 'claude-subscription' | 'claude-screenshot' | 'claude-local';
+  apiProvider: 'openai' | 'claude-api';
   language: 'ja' | 'en';
 }
 
@@ -35,7 +35,7 @@ async function getSettings(): Promise<Settings> {
         
         const settings: Settings = result.settings || {
           apiKey: '',
-          apiProvider: 'instant',
+          apiProvider: 'openai',
           language: 'ja'
         };
         resolve(settings);
@@ -79,39 +79,7 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
       
       console.log('About to send message, provider:', settings.apiProvider);
       
-      if (settings.apiProvider === 'instant') {
-        console.log('Using instant provider');
-        // コンテキストが無効でないかチェック
-        if (!chrome.runtime?.id) {
-          throw new Error('拡張機能が再読み込みされました。ページをリロードしてください。');
-        }
-        
-        chrome.runtime.sendMessage({
-          type: 'INSTANT_ANSWER',
-          word: initialPrompt,
-          context: fullText,
-          language: settings.language
-        }, (response) => {
-          console.log('Instant answer response:', response);
-          if (chrome.runtime.lastError) {
-            console.error('Chrome runtime error:', chrome.runtime.lastError);
-            setCurrentAnswer({ word, answer: 'エラー: 拡張機能との通信に失敗しました。ページをリロードしてください。' });
-            setLoading(false);
-            return;
-          }
-          if (response && response.answer) {
-            setCurrentAnswer({ word, answer: response.answer });
-            // 最初の解説をチャット履歴に追加
-            setMessages([
-              { role: 'user', content: `「${word}」のこの動画での意味` },
-              { role: 'assistant', content: response.answer }
-            ]);
-          } else {
-            setCurrentAnswer({ word, answer: 'エラー: 回答を取得できませんでした' });
-          }
-          setLoading(false);
-        });
-      } else {
+      {
         console.log('Using API provider:', settings.apiProvider);
         // コンテキストが無効でないかチェック
         if (!chrome.runtime?.id) {
@@ -145,7 +113,7 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
             } else if (response.error.includes('401')) {
               errorMessage = 'APIキーが無効です。設定画面で正しいAPIキーを入力してください。';
             } else if (response.error.includes('credit balance is too low')) {
-              errorMessage = 'Claude APIのクレジット残高が不足しています。\n\n対処方法：\n1. Anthropicアカウントでクレジットを追加\n2. またはOpenAI (ChatGPT)に切り替え';
+              errorMessage = 'Claude APIのクレジット残高が不足しています。\n\nAnthropicアカウントでクレジットを追加してください。';
             }
             setCurrentAnswer({ word, answer: errorMessage });
           }
@@ -176,7 +144,7 @@ export const ExplanationPanel: React.FC<ExplanationPanelProps> = ({ selectedWord
       const fullContext = `${conversationContext}\n\nユーザー: ${inputValue}`;
       
       chrome.runtime.sendMessage({
-        type: settings.apiProvider === 'instant' ? 'INSTANT_ANSWER' : 'ASK_AI',
+        type: 'ASK_AI',
         word: inputValue,  // 質問をそのまま送信
         context: fullContext,
         language: settings.language

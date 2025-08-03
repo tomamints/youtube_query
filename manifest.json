@@ -6,15 +6,16 @@
   "permissions": [
     "storage",
     "activeTab",
-    "tabs",
-    "<all_urls>"
+    "tabs"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://api.openai.com/*",
-    "https://api.anthropic.com/*",
-    "http://localhost:3456/*"
+    "https://api.anthropic.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"

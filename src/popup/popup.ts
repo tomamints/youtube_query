@@ -3,7 +3,7 @@
 // 設定の型定義
 export interface Settings {
   apiKey: string;
-  apiProvider: 'instant' | 'openai' | 'claude-api' | 'claude-subscription' | 'claude-screenshot' | 'claude-local';
+  apiProvider: 'openai' | 'claude-api';
   language: 'ja' | 'en';
   enabled?: boolean; // 拡張機能のON/OFF状態
 }
@@ -31,10 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="setting-group">
           <label for="apiProvider">APIプロバイダー:</label>
           <select id="apiProvider">
-            <option value="instant">即答モード（無料）</option>
             <option value="openai">OpenAI (ChatGPT)</option>
             <option value="claude-api">Claude API</option>
-            <option value="claude-subscription">Claude.ai サブスク</option>
           </select>
         </div>
 
@@ -320,15 +318,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     
-    // APIキーの形式をチェック
-    if (settings.apiProvider === 'openai' && settings.apiKey && !settings.apiKey.startsWith('sk-')) {
-      showStatus('OpenAI APIキーは "sk-" で始まる必要があります', 'error');
-      return;
+    // APIキーの形式と長さをチェック
+    if (settings.apiProvider === 'openai' && settings.apiKey) {
+      if (!settings.apiKey.startsWith('sk-') || settings.apiKey.length < 40) {
+        showStatus('OpenAI APIキーの形式が正しくありません', 'error');
+        return;
+      }
+      // 危険な文字が含まれていないかチェック
+      if (!/^sk-[a-zA-Z0-9-_]+$/.test(settings.apiKey)) {
+        showStatus('APIキーに無効な文字が含まれています', 'error');
+        return;
+      }
     }
     
-    if (settings.apiProvider === 'claude-api' && settings.apiKey && !settings.apiKey.startsWith('sk-ant-')) {
-      showStatus('Claude APIキーは "sk-ant-" で始まる必要があります', 'error');
-      return;
+    if (settings.apiProvider === 'claude-api' && settings.apiKey) {
+      if (!settings.apiKey.startsWith('sk-ant-') || settings.apiKey.length < 50) {
+        showStatus('Claude APIキーの形式が正しくありません', 'error');
+        return;
+      }
+      // 危険な文字が含まれていないかチェック
+      if (!/^sk-ant-[a-zA-Z0-9-_]+$/.test(settings.apiKey)) {
+        showStatus('APIキーに無効な文字が含まれています', 'error');
+        return;
+      }
     }
 
     // 設定を保存
@@ -361,7 +373,7 @@ export async function getSettings(): Promise<Settings> {
     chrome.storage.local.get(['settings'], (result) => {
       const settings: Settings = result.settings || {
         apiKey: '',
-        apiProvider: 'instant',
+        apiProvider: 'openai',
         language: 'ja'
       };
       resolve(settings);

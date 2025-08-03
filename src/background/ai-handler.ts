@@ -9,7 +9,7 @@ interface AIRequest {
 
 interface Settings {
   apiKey: string;
-  apiProvider: 'instant' | 'openai' | 'claude-api' | 'claude-subscription' | 'claude-screenshot' | 'claude-local';
+  apiProvider: 'openai' | 'claude-api';
   language: string;
 }
 
