@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube学習アシスタント - プライバシーポリシー</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #4CAF50;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        ul {
+            background: #f5f5f5;
+            padding: 20px 40px;
+            border-radius: 8px;
+        }
+        .update-date {
+            color: #666;
+            font-size: 14px;
+        }
+        .contact {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube学習アシスタント プライバシーポリシー</h1>
+    
+    <p class="update-date">最終更新日: 2025年1月27日</p>
+    
+    <h2>はじめに</h2>
+    <p>YouTube学習アシスタント（以下、「本拡張機能」）は、ユーザーのプライバシーを尊重し、個人情報の保護に努めています。このプライバシーポリシーでは、本拡張機能がどのような情報を収集し、どのように使用するかを説明します。</p>
+    
+    <h2>収集する情報</h2>
+    <p>本拡張機能は以下の情報を収集・保存します：</p>
+    <ul>
+        <li><strong>APIキー</strong>: OpenAI (ChatGPT) またはClaude APIを利用するためのキー</li>
+        <li><strong>学習履歴</strong>: クリックした単語とAIによる解説内容（最新100件まで）</li>
+        <li><strong>設定情報</strong>: 言語設定、APIプロバイダーの選択、拡張機能のON/OFF状態</li>
+        <li><strong>字幕データ</strong>: 現在視聴中のYouTube動画の字幕（一時的にメモリ上で処理）</li>
+    </ul>
+    
+    <h2>情報の使用目的</h2>
+    <ul>
+        <li><strong>APIキー</strong>: OpenAI/Claude APIへのリクエスト送信にのみ使用</li>
+        <li><strong>学習履歴</strong>: ユーザーの学習進捗を確認できるようにするため</li>
+        <li><strong>設定情報</strong>: ユーザーの好みに応じた動作を提供するため</li>
+        <li><strong>字幕データ</strong>: 単語の文脈を理解し、適切な解説を生成するため</li>
+    </ul>
+    
+    <h2>データの保存場所</h2>
+    <p>すべてのデータは<strong>ユーザーのブラウザ内（ローカルストレージ）</strong>にのみ保存されます。外部サーバーへの送信や保存は一切行いません。</p>
+    
+    <h2>第三者への情報提供</h2>
+    <p>本拡張機能は、以下の場合を除き、収集した情報を第三者に提供することはありません：</p>
+    <ul>
+        <li>ユーザーが設定したAPIキーを使用して、OpenAI/Anthropic社のAPIにリクエストを送信する場合</li>
+        <li>これらのAPIリクエストには、選択された単語と動画の文脈情報が含まれます</li>
+    </ul>
+    
+    <h2>データのセキュリティ</h2>
+    <p>APIキーは暗号化されてブラウザのローカルストレージに保存されます。ただし、ブラウザのローカルストレージは完全にセキュアではないため、共有コンピューターでの使用には注意してください。</p>
+    
+    <h2>ユーザーの権利</h2>
+    <p>ユーザーはいつでも：</p>
+    <ul>
+        <li>Chrome拡張機能の設定から、保存されたすべてのデータを削除できます</li>
+        <li>拡張機能をアンインストールすることで、すべてのローカルデータを削除できます</li>
+        <li>設定画面から拡張機能をOFFにすることで、データ収集を停止できます</li>
+    </ul>
+    
+    <h2>子供のプライバシー</h2>
+    <p>本拡張機能は13歳未満の子供を対象としていません。13歳未満の方は保護者の同意を得てご利用ください。</p>
+    
+    <h2>プライバシーポリシーの変更</h2>
+    <p>このプライバシーポリシーは必要に応じて更新される場合があります。重要な変更がある場合は、拡張機能の更新情報でお知らせします。</p>
+    
+    <div class="contact">
+        <h2>お問い合わせ</h2>
+        <p>プライバシーに関するご質問やご懸念がある場合は、以下の方法でお問い合わせください：</p>
+        <p><strong>GitHub Issues</strong>: <a href="https://github.com/tomamints/youtube_query/issues">https://github.com/tomamints/youtube_query/issues</a></p>
+    </div>
+</body>
+</html>
