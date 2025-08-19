@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube学習アシスタント アイコン生成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .icon-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .icon-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube学習アシスタント - アイコン生成ツール</h1>
+    
+    <div class="instructions">
+        <h3>使い方:</h3>
+        <ol>
+            <li>このHTMLファイルをブラウザで開く</li>
+            <li>各サイズのアイコンが自動生成されます</li>
+            <li>「ダウンロード」ボタンをクリックして保存</li>
+            <li>保存したファイルを assets/icons/ フォルダに配置</li>
+        </ol>
+    </div>
+    
+    <div class="icon-container">
+        <div class="icon-box">
+            <h3>16x16px</h3>
+            <canvas id="icon16" width="16" height="16"></canvas>
+            <button onclick="downloadIcon('icon16', 16)">icon16.png をダウンロード</button>
+        </div>
+        
+        <div class="icon-box">
+            <h3>48x48px</h3>
+            <canvas id="icon48" width="48" height="48"></canvas>
+            <button onclick="downloadIcon('icon48', 48)">icon48.png をダウンロード</button>
+        </div>
+        
+        <div class="icon-box">
+            <h3>128x128px</h3>
+            <canvas id="icon128" width="128" height="128"></canvas>
+            <button onclick="downloadIcon('icon128', 128)">icon128.png をダウンロード</button>
+        </div>
+    </div>
+
+    <script>
+        // アイコンを描画する関数
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // 背景（緑色の角丸四角形）
+            ctx.fillStyle = '#4CAF50';
+            roundRect(ctx, 0, 0, size, size, size * 0.15);
+            ctx.fill();
+            
+            // 本のアイコン（白色）
+            const bookWidth = size * 0.5;
+            const bookHeight = size * 0.5;
+            const bookX = (size - bookWidth) / 2;
+            const bookY = (size - bookHeight) / 2;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            roundRect(ctx, bookX, bookY, bookWidth, bookHeight, size * 0.05);
+            ctx.fill();
+            
+            // 本の線（緑色）
+            ctx.fillStyle = '#4CAF50';
+            const lineHeight = size * 0.03;
+            const lineSpacing = size * 0.08;
+            
+            // 3本の線を描画
+            for (let i = 0; i < 3; i++) {
+                const y = bookY + size * 0.12 + (i * lineSpacing);
+                const width = i < 2 ? bookWidth * 0.7 : bookWidth * 0.5;
+                roundRect(ctx, bookX + bookWidth * 0.15, y, width, lineHeight, lineHeight/2);
+                ctx.fill();
+            }
+            
+            // AIマーク（オレンジ色の円）
+            if (size >= 48) {  // 小さいアイコンには表示しない
+                const circleRadius = size * 0.12;
+                const circleX = bookX + bookWidth - circleRadius * 0.5;
+                const circleY = bookY + bookHeight - circleRadius * 0.5;
+                
+                ctx.fillStyle = '#FF9800';
+                ctx.beginPath();
+                ctx.arc(circleX, circleY, circleRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // AI文字
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.12}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('AI', circleX, circleY);
+            }
+        }
+        
+        // 角丸四角形を描画する関数
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        // アイコンをダウンロードする関数
+        function downloadIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // 全サイズのアイコンを描画
+        drawIcon('icon16', 16);
+        drawIcon('icon48', 48);
+        drawIcon('icon128', 128);
+    </script>
+</body>
+</html>

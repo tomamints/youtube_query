@@ -83,14 +83,6 @@ export class AdDetector {
     }
   }
   
-  // 広告スキップボタンを自動クリック（オプション）
-  autoSkipAds() {
-    setInterval(() => {
-      const skipButton = document.querySelector('.ytp-ad-skip-button-container button') as HTMLButtonElement;
-      if (skipButton && skipButton.offsetParent !== null) {
-        console.log('🎯 Auto-skipping ad');
-        skipButton.click();
-      }
-    }, 1000);
-  }
+  // 広告スキップ機能は削除しました（Chrome Web Storeポリシー準拠のため）
+  // この拡張機能は広告の検出のみを行い、学習コンテンツの表示タイミングを調整します
 }

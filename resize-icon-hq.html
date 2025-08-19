@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>高画質アイコンリサイズツール</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .quality-settings {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .upload-area {
+            border: 3px dashed #2196F3;
+            border-radius: 8px;
+            padding: 60px;
+            text-align: center;
+            margin: 20px 0;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        .upload-area:hover {
+            border-color: #1976D2;
+            background: #e3f2fd;
+        }
+        .upload-area.active {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .original-preview {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            display: none;
+        }
+        .original-preview img {
+            max-width: 300px;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .preview-container {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .icon-box {
+            text-align: center;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .canvas-container {
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        canvas {
+            display: block;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: pixelated;
+        }
+        .canvas-large {
+            zoom: 3;
+        }
+        .canvas-medium {
+            zoom: 2;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .download-all {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .download-all button {
+            background: #2196F3;
+            font-size: 16px;
+            padding: 12px 30px;
+        }
+        .download-all button:hover {
+            background: #1976D2;
+        }
+        .tips {
+            background: #fff9c4;
+            border: 1px solid #f9a825;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .size-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 高画質アイコンリサイズツール</h1>
+        
+        <div class="quality-settings">
+            <strong>💎 高画質設定:</strong>
+            <ul>
+                <li>元画像の品質を最大限保持</li>
+                <li>スムージング処理で滑らかな縮小</li>
+                <li>透明背景をサポート</li>
+                <li>PNG形式で無劣化保存</li>
+            </ul>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📸 クリックして画像を選択<br>またはドラッグ＆ドロップ</p>
+            <p style="font-size: 14px; color: #666;">推奨: 512×512px以上の高解像度画像</p>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+        
+        <div class="original-preview" id="originalPreview">
+            <h3>元画像</h3>
+            <img id="originalImage" alt="Original">
+            <div class="size-info" id="originalSize"></div>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <div class="icon-box">
+                <h3>16×16px</h3>
+                <div class="canvas-container">
+                    <canvas id="canvas16" width="16" height="16" class="canvas-large"></canvas>
+                </div>
+                <div class="size-info">ツールバー用（3倍拡大表示）</div>
+                <button onclick="downloadIcon(16)">icon16.png をダウンロード</button>
+            </div>
+            
+            <div class="icon-box">
+                <h3>48×48px</h3>
+                <div class="canvas-container">
+                    <canvas id="canvas48" width="48" height="48" class="canvas-medium"></canvas>
+                </div>
+                <div class="size-info">拡張機能管理画面用（2倍拡大表示）</div>
+                <button onclick="downloadIcon(48)">icon48.png をダウンロード</button>
+            </div>
+            
+            <div class="icon-box">
+                <h3>128×128px</h3>
+                <div class="canvas-container">
+                    <canvas id="canvas128" width="128" height="128"></canvas>
+                </div>
+                <div class="size-info">Chrome Web Store用（実寸表示）</div>
+                <button onclick="downloadIcon(128)">icon128.png をダウンロード</button>
+            </div>
+        </div>
+        
+        <div class="tips">
+            <strong>💡 高画質のコツ:</strong>
+            <ul>
+                <li>元画像は大きいほど良い（512×512px以上推奨）</li>
+                <li>背景が透明なPNG画像がベスト</li>
+                <li>シンプルなデザインほど小さいサイズでも綺麗</li>
+            </ul>
+        </div>
+        
+        <div class="download-all" id="downloadAll" style="display: none;">
+            <button onclick="downloadAllIcons()">📦 すべてのアイコンを高画質でダウンロード</button>
+            <p style="margin-top: 10px; color: #666;">ダウンロード後、assets/icons/ フォルダに移動してください</p>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadAll = document.getElementById('downloadAll');
+        const originalPreview = document.getElementById('originalPreview');
+        const originalImage = document.getElementById('originalImage');
+        const originalSize = document.getElementById('originalSize');
+        
+        let currentImage = null;
+        
+        // クリックでファイル選択
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // ドラッグ＆ドロップ対応
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleImage(files[0]);
+            }
+        });
+        
+        // ファイル選択時の処理
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImage(file);
+            }
+        });
+        
+        // 画像処理
+        function handleImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    
+                    // 元画像のプレビュー
+                    originalImage.src = img.src;
+                    originalSize.textContent = `サイズ: ${img.width}×${img.height}px`;
+                    originalPreview.style.display = 'block';
+                    
+                    // 高画質で3つのサイズにリサイズ
+                    resizeImageHQ(img, 16);
+                    resizeImageHQ(img, 48);
+                    resizeImageHQ(img, 128);
+                    
+                    // プレビューを表示
+                    previewContainer.style.display = 'grid';
+                    downloadAll.style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 高画質リサイズ処理
+        function resizeImageHQ(img, targetSize) {
+            const canvas = document.getElementById(`canvas${targetSize}`);
+            const ctx = canvas.getContext('2d');
+            
+            // アンチエイリアスを有効化
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // 背景をクリア（透明に）
+            ctx.clearRect(0, 0, targetSize, targetSize);
+            
+            // 段階的な縮小で高画質を保つ
+            if (img.width > targetSize * 4) {
+                // 大きすぎる画像は段階的に縮小
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                let currentWidth = img.width;
+                let currentHeight = img.height;
+                let scale = 0.5;
+                
+                // 目標サイズの2倍になるまで段階的に縮小
+                while (currentWidth > targetSize * 2) {
+                    currentWidth *= scale;
+                    currentHeight *= scale;
+                    
+                    tempCanvas.width = currentWidth;
+                    tempCanvas.height = currentHeight;
+                    
+                    tempCtx.imageSmoothingEnabled = true;
+                    tempCtx.imageSmoothingQuality = 'high';
+                    tempCtx.drawImage(img, 0, 0, currentWidth, currentHeight);
+                    
+                    img = tempCanvas;
+                }
+            }
+            
+            // 最終的なリサイズ
+            const scale = Math.min(targetSize / img.width, targetSize / img.height);
+            const width = img.width * scale;
+            const height = img.height * scale;
+            const x = (targetSize - width) / 2;
+            const y = (targetSize - height) / 2;
+            
+            // 描画
+            ctx.drawImage(img, x, y, width, height);
+        }
+        
+        // 個別ダウンロード（高画質）
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png', 1.0); // 最高画質で保存
+        }
+        
+        // 一括ダウンロード
+        function downloadAllIcons() {
+            [16, 48, 128].forEach((size, index) => {
+                setTimeout(() => downloadIcon(size), index * 500);
+            });
+        }
+    </script>
+</body>
+</html>
